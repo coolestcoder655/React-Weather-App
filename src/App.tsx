@@ -1,11 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Cloud, Sun, CloudRain, CloudSnow, AlertCircle } from "lucide-react";
+import {
+  Cloud,
+  Sun,
+  CloudRain,
+  CloudSnow,
+  AlertCircle,
+  Info,
+} from "lucide-react";
 import "./hourly-scrollbar.css";
 import SearchBar from "./components/SearchBar";
 import ConditionSquare from "./components/ConditionSquare";
 import HourlyForecast from "./components/HourlyForecast";
 import WeeklyForecast from "./components/WeeklyForecast";
-
+import Credits from "./components/Credits";
 // Use Vite environment variable
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -73,6 +80,7 @@ const WeatherApp: React.FC = () => {
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [showCredits, setShowCredits] = useState<boolean>(false);
   const [weatherData, setWeatherData] = useState<WeatherData>({
     temperature: 72,
     condition: "sunny",
@@ -199,13 +207,67 @@ const WeatherApp: React.FC = () => {
     }
   };
 
+  // Get user's current location
+  const getCurrentLocation = useCallback(() => {
+    if (navigator.geolocation) {
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            if (!API_KEY || API_KEY === "YOUR_API_KEY_HERE") {
+              setError(
+                "Please add your WeatherAPI.com API key to use real data"
+              );
+              return;
+            }
+            const response = await fetch(
+              `${BASE_URL}/search.json?key=${API_KEY}&q=${latitude},${longitude}`
+            );
+            if (!response.ok) {
+              throw new Error("Failed to get location name");
+            }
+            const data = await response.json();
+            if (data && data[0]) {
+              setSelectedCity(data[0].name);
+            }
+          } catch {
+            setError("Failed to get your location. Using default city.");
+            setSelectedCity("New York");
+          } finally {
+            setLoading(false);
+          }
+        },
+        (err) => {
+          console.error("Geolocation error:", err);
+          setError("Location access denied. Using default city.");
+          setSelectedCity("New York");
+          setLoading(false);
+        }
+      );
+    } else {
+      setError(
+        "Geolocation is not supported by your browser. Using default city."
+      );
+      setSelectedCity("New York");
+    }
+  }, [BASE_URL]);
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Initialize with user's location
   useEffect(() => {
-    fetchWeatherData(selectedCity);
+    getCurrentLocation();
+  }, [getCurrentLocation]);
+
+  // Only fetch weather when we have a selected city
+  useEffect(() => {
+    if (selectedCity) {
+      fetchWeatherData(selectedCity);
+    }
   }, [fetchWeatherData, selectedCity]);
 
   // Debounced search
@@ -298,133 +360,155 @@ const WeatherApp: React.FC = () => {
   };
 
   return (
-    <div
-      className={`min-h-screen bg-gradient-to-br ${getBackgroundGradient(
-        weatherData.condition
-      )} p-6 transition-all duration-1000 flex items-center justify-center`}
-    >
-      <div className="w-full max-w-5xl flex flex-col md:flex-row gap-8 items-stretch">
-        {/* Left: Main Weather Card and Details */}
-        <div className="flex-1 flex flex-col gap-6 justify-center md:justify-center md:h-[88px]">
-          {/* Header */}
-          <div className="text-left md:mb-0 md:pr-8 flex flex-col justify-center h-full">
-            <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
-              Weather
-            </h1>
-            <p className="text-white/80 text-sm">
-              {currentTime.toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          </div>
+    <div style={{ minHeight: "100vh", position: "relative" }}>
+      <div
+        className={`min-h-screen bg-gradient-to-br ${getBackgroundGradient(
+          weatherData.condition
+        )} p-6 transition-all duration-1000 flex items-center justify-center`}
+      >
+        <div className="w-full max-w-5xl flex flex-col md:flex-row gap-8 items-stretch">
+          {/* Left: Main Weather Card and Details */}
+          <div className="flex-1 flex flex-col gap-6 justify-center md:justify-center md:h-[88px]">
+            {/* Header with Credits button */}
+            <div className="text-left md:mb-0 md:pr-8 flex flex-col justify-center h-full relative">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+                  SunScope
+                </h1>
+                <button
+                  onClick={() => setShowCredits(true)}
+                  className="text-white/80 hover:text-white transition-colors text-sm flex items-center gap-1 bg-white/10 rounded-full px-3 py-1"
+                >
+                  <Info size={16} />
+                  <span>Credits</span>
+                </button>
+              </div>
+              <p className="text-white/80 text-sm">
+                {currentTime.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
 
-          {/* API Key Warning */}
-          {(!API_KEY || API_KEY === "YOUR_API_KEY_HERE") && (
-            <div className="bg-red-500/20 backdrop-blur-md rounded-2xl p-4 mb-6 border border-red-400/30">
-              <div className="flex items-center gap-3 text-white">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <div className="text-sm">
-                  <p className="font-medium">API Key Required</p>
-                  <p className="text-white/80">
-                    Get a free API key from weatherapi.com and replace
-                    'YOUR_API_KEY_HERE' in the code.
-                  </p>
+            {/* API Key Warning */}
+            {(!API_KEY || API_KEY === "YOUR_API_KEY_HERE") && (
+              <div className="bg-red-500/20 backdrop-blur-md rounded-2xl p-4 mb-6 border border-red-400/30">
+                <div className="flex items-center gap-3 text-white">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium">API Key Required</p>
+                    <p className="text-white/80">
+                      Get a free API key from weatherapi.com and replace
+                      'YOUR_API_KEY_HERE' in the code.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Main Weather Card */}
-          <div className="bg-white/15 backdrop-blur-lg rounded-3xl p-8 mb-6 border border-white/20 shadow-2xl transform hover:scale-105 transition-all duration-300">
-            <div className="text-center">
-              <div className="mb-4">
-                {getWeatherIcon(weatherData.condition, "w-20 h-20")}
+            {/* Main Weather Card */}
+            <div className="bg-white/15 backdrop-blur-lg rounded-3xl p-8 mb-6 border border-white/20 shadow-2xl transform hover:scale-105 transition-all duration-300">
+              <div className="text-center">
+                <div className="mb-4">
+                  {getWeatherIcon(weatherData.condition, "w-20 h-20")}
+                </div>
+                <h2 className="text-6xl font-thin text-white mb-2 drop-shadow-lg">
+                  {weatherData.temperature}°
+                </h2>
+                <p className="text-white/80 text-lg capitalize mb-4">
+                  {weatherData.condition}
+                </p>
+                <p className="text-white/70 text-sm">
+                  Feels like {weatherData.feelsLike}°
+                </p>
               </div>
-              <h2 className="text-6xl font-thin text-white mb-2 drop-shadow-lg">
-                {weatherData.temperature}°
-              </h2>
-              <p className="text-white/80 text-lg capitalize mb-4">
-                {weatherData.condition}
-              </p>
-              <p className="text-white/70 text-sm">
-                Feels like {weatherData.feelsLike}°
-              </p>
             </div>
-          </div>
 
-          {/* Weather Details Grid */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <ConditionSquare type="humidity" value={weatherData.humidity} />
-            <ConditionSquare type="wind" value={weatherData.windSpeed} />
-            <ConditionSquare type="visibility" value={weatherData.visibility} />
-            <ConditionSquare type="pressure" value={weatherData.pressure} />
-          </div>
-        </div>
-
-        {/* Right: Search, Hourly, Weekly Forecast */}
-        <div className="flex-1 flex flex-col gap-6 justify-center md:justify-center md:h-[88px]">
-          {/* API Key Warning, City Search, Error Message */}
-          <div className="mb-8 relative flex flex-col md:flex-row md:items-center md:gap-4 md:h-[72px]">
-            <form
-              onSubmit={handleSearch}
-              className="flex-1 flex items-center h-full"
-            >
-              <SearchBar
-                searchQuery={searchQuery}
-                loading={loading}
-                handleInputBlur={handleInputBlur}
-                handleInputFocus={handleInputFocus}
-                handleInputChange={handleInputChange}
+            {/* Weather Details Grid */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <ConditionSquare type="humidity" value={weatherData.humidity} />
+              <ConditionSquare type="wind" value={weatherData.windSpeed} />
+              <ConditionSquare
+                type="visibility"
+                value={weatherData.visibility}
               />
-            </form>
-            {/* Autocomplete Suggestions */}
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white/20 backdrop-blur-lg rounded-2xl border border-white/30 shadow-2xl max-h-60 overflow-y-auto z-10">
-                {suggestions.map((city, index) => (
-                  <button
-                    key={`${city.name}-${city.region}`}
-                    onClick={() => handleCitySelect(city)}
-                    className={`w-full text-left px-4 py-3 text-white hover:bg-white/20 transition-all duration-200 ${
-                      index === 0 ? "rounded-t-2xl" : ""
-                    } ${
-                      index === suggestions.length - 1 ? "rounded-b-2xl" : ""
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{city.displayName}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-2 text-center text-white/60 text-sm">
-              Current: {selectedCity}
+              <ConditionSquare type="pressure" value={weatherData.pressure} />
             </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mt-2 text-center text-red-300 text-sm bg-red-500/20 rounded-lg p-2">
-                {error}
-              </div>
-            )}
           </div>
 
-          {/* Hourly Forecast */}
-          <HourlyForecast
-            hourly={weatherData.hourly}
-            getWeatherIcon={getWeatherIcon}
-            scrollHourly={scrollHourly}
-            hourlyScrollRef={hourlyScrollRef}
-          />
+          {/* Right: Search, Hourly, Weekly Forecast */}
+          <div className="flex-1 flex flex-col gap-6 justify-center md:justify-center md:h-[88px]">
+            {/* API Key Warning, City Search, Error Message */}
+            <div className="mb-8 relative flex flex-col md:flex-row md:items-center md:gap-4 md:h-[72px]">
+              <form
+                onSubmit={handleSearch}
+                className="flex-1 flex items-center h-full"
+              >
+                <SearchBar
+                  searchQuery={searchQuery}
+                  loading={loading}
+                  handleInputBlur={handleInputBlur}
+                  handleInputFocus={handleInputFocus}
+                  handleInputChange={handleInputChange}
+                />
+              </form>
+              {/* Autocomplete Suggestions */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white/20 backdrop-blur-lg rounded-2xl border border-white/30 shadow-2xl max-h-60 overflow-y-auto z-10">
+                  {suggestions.map((city, index) => (
+                    <button
+                      key={`${city.name}-${city.region}`}
+                      onClick={() => handleCitySelect(city)}
+                      className={`w-full text-left px-4 py-3 text-white hover:bg-white/20 transition-all duration-200 ${
+                        index === 0 ? "rounded-t-2xl" : ""
+                      } ${
+                        index === suggestions.length - 1 ? "rounded-b-2xl" : ""
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{city.displayName}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
 
-          {/* Weekly Forecast */}
-          <WeeklyForecast
-            forecast={weatherData.forecast}
-            getWeatherIcon={getWeatherIcon}
-          />
+              <div className="mt-2 text-center text-white/60 text-sm">
+                Current: {selectedCity}
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="mt-2 text-center text-red-300 text-sm bg-red-500/20 rounded-lg p-2">
+                  {error}
+                </div>
+              )}
+            </div>
+
+            {/* Hourly Forecast */}
+            <HourlyForecast
+              hourly={weatherData.hourly}
+              getWeatherIcon={getWeatherIcon}
+              scrollHourly={scrollHourly}
+              hourlyScrollRef={hourlyScrollRef}
+            />
+
+            {/* Weekly Forecast */}
+            <WeeklyForecast
+              forecast={weatherData.forecast}
+              getWeatherIcon={getWeatherIcon}
+            />
+
+            {/* Credits Component */}
+            <div className="mt-auto">
+              <Credits
+                isOpen={showCredits}
+                onClose={() => setShowCredits(false)}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
