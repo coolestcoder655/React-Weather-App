@@ -310,244 +310,254 @@ const WeatherApp: React.FC = () => {
     <div
       className={`min-h-screen bg-gradient-to-br ${getBackgroundGradient(
         weatherData.condition
-      )} p-6 transition-all duration-1000`}
+      )} p-6 transition-all duration-1000 flex items-center justify-center`}
     >
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
-            Weather
-          </h1>
-          <p className="text-white/80 text-sm">
-            {currentTime.toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        </div>
-
-        {/* API Key Warning */}
-        {(!API_KEY || API_KEY === "YOUR_API_KEY_HERE") && (
-          <div className="bg-red-500/20 backdrop-blur-md rounded-2xl p-4 mb-6 border border-red-400/30">
-            <div className="flex items-center gap-3 text-white">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <div className="text-sm">
-                <p className="font-medium">API Key Required</p>
-                <p className="text-white/80">
-                  Get a free API key from weatherapi.com and replace
-                  'YOUR_API_KEY_HERE' in the code.
-                </p>
-              </div>
-            </div>
+      <div className="w-full max-w-5xl flex flex-col md:flex-row gap-8 items-stretch">
+        {/* Left: Main Weather Card and Details */}
+        <div className="flex-1 flex flex-col gap-6 justify-center md:justify-center md:h-[88px]">
+          {/* Header */}
+          <div className="text-left md:mb-0 md:pr-8 flex flex-col justify-center h-full">
+            <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+              Weather
+            </h1>
+            <p className="text-white/80 text-sm">
+              {currentTime.toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
           </div>
-        )}
 
-        {/* City Search */}
-        <div className="mb-8 relative">
-          <form onSubmit={handleSearch}>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/70" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-                placeholder="Search for a city..."
-                className="w-full bg-white/20 backdrop-blur-md text-white placeholder-white/70 rounded-2xl pl-12 pr-4 py-3 text-lg font-medium border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
-                disabled={loading}
-              />
-              {loading && (
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          {/* API Key Warning */}
+          {(!API_KEY || API_KEY === "YOUR_API_KEY_HERE") && (
+            <div className="bg-red-500/20 backdrop-blur-md rounded-2xl p-4 mb-6 border border-red-400/30">
+              <div className="flex items-center gap-3 text-white">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-medium">API Key Required</p>
+                  <p className="text-white/80">
+                    Get a free API key from weatherapi.com and replace
+                    'YOUR_API_KEY_HERE' in the code.
+                  </p>
                 </div>
-              )}
+              </div>
             </div>
-          </form>
+          )}
 
-          {/* Autocomplete Suggestions */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white/20 backdrop-blur-lg rounded-2xl border border-white/30 shadow-2xl max-h-60 overflow-y-auto z-10">
-              {suggestions.map((city, index) => (
-                <button
-                  key={`${city.name}-${city.region}`}
-                  onClick={() => handleCitySelect(city)}
-                  className={`w-full text-left px-4 py-3 text-white hover:bg-white/20 transition-all duration-200 ${
-                    index === 0 ? "rounded-t-2xl" : ""
-                  } ${index === suggestions.length - 1 ? "rounded-b-2xl" : ""}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{city.displayName}</span>
+          {/* Main Weather Card */}
+          <div className="bg-white/15 backdrop-blur-lg rounded-3xl p-8 mb-6 border border-white/20 shadow-2xl transform hover:scale-105 transition-all duration-300">
+            <div className="text-center">
+              <div className="mb-4">
+                {getWeatherIcon(weatherData.condition, "w-20 h-20")}
+              </div>
+              <h2 className="text-6xl font-thin text-white mb-2 drop-shadow-lg">
+                {weatherData.temperature}°
+              </h2>
+              <p className="text-white/80 text-lg capitalize mb-4">
+                {weatherData.condition}
+              </p>
+              <p className="text-white/70 text-sm">
+                Feels like {weatherData.feelsLike}°
+              </p>
+            </div>
+          </div>
+
+          {/* Weather Details Grid */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <Droplets className="w-6 h-6 text-blue-300" />
+                <div className="text-right">
+                  <p className="text-white/70 text-xs">Humidity</p>
+                  <p className="text-white text-lg font-semibold">
+                    {weatherData.humidity}%
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <Wind className="w-6 h-6 text-green-300" />
+                <div className="text-right">
+                  <p className="text-white/70 text-xs">Wind</p>
+                  <p className="text-white text-lg font-semibold">
+                    {weatherData.windSpeed} mph
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <Eye className="w-6 h-6 text-purple-300" />
+                <div className="text-right">
+                  <p className="text-white/70 text-xs">Visibility</p>
+                  <p className="text-white text-lg font-semibold">
+                    {weatherData.visibility} mi
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <Gauge className="w-6 h-6 text-yellow-300" />
+                <div className="text-right">
+                  <p className="text-white/70 text-xs">Pressure</p>
+                  <p className="text-white text-lg font-semibold">
+                    {weatherData.pressure}"
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Search, Hourly, Weekly Forecast */}
+        <div className="flex-1 flex flex-col gap-6 justify-center md:justify-center md:h-[88px]">
+          {/* API Key Warning, City Search, Error Message */}
+          <div className="mb-8 relative flex flex-col md:flex-row md:items-center md:gap-4 md:h-[72px]">
+            <form
+              onSubmit={handleSearch}
+              className="flex-1 flex items-center h-full"
+            >
+              <div className="relative w-full">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-2 text-white/70" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleInputChange}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
+                  placeholder="Search for a city..."
+                  className="w-full bg-white/20 backdrop-blur-md text-white placeholder-white/70 rounded-2xl pl-12 pr-4 py-3 text-lg font-medium border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
+                  disabled={loading}
+                />
+                {loading && (
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   </div>
+                )}
+              </div>
+            </form>
+            {/* Autocomplete Suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white/20 backdrop-blur-lg rounded-2xl border border-white/30 shadow-2xl max-h-60 overflow-y-auto z-10">
+                {suggestions.map((city, index) => (
+                  <button
+                    key={`${city.name}-${city.region}`}
+                    onClick={() => handleCitySelect(city)}
+                    className={`w-full text-left px-4 py-3 text-white hover:bg-white/20 transition-all duration-200 ${
+                      index === 0 ? "rounded-t-2xl" : ""
+                    } ${
+                      index === suggestions.length - 1 ? "rounded-b-2xl" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{city.displayName}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-2 text-center text-white/60 text-sm">
+              Current: {selectedCity}
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mt-2 text-center text-red-300 text-sm bg-red-500/20 rounded-lg p-2">
+                {error}
+              </div>
+            )}
+          </div>
+
+          {/* Hourly Forecast */}
+          {weatherData.hourly.length > 0 && (
+            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+              <h3 className="text-white text-lg font-semibold mb-4">
+                Hourly Forecast
+              </h3>
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-label="Scroll left"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 shadow-lg"
+                  style={{
+                    display: weatherData.hourly.length > 4 ? "block" : "none",
+                  }}
+                  onClick={() => scrollHourly("left")}
+                >
+                  <ChevronLeft className="w-6 h-6" />
                 </button>
-              ))}
+                <div
+                  ref={hourlyScrollRef}
+                  className="flex gap-4 pb-2 mx-auto w-full max-w-[300px] overflow-x-hidden"
+                  style={{ scrollBehavior: "smooth" }}
+                >
+                  {weatherData.hourly.map((hour, index) => (
+                    <div
+                      key={index}
+                      className="flex-shrink-0 text-center min-w-[60px] hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                    >
+                      <p className="text-white/70 text-xs mb-2">{hour.time}</p>
+                      <div className="mb-2 flex justify-center">
+                        {getWeatherIcon(hour.condition, "w-5 h-5")}
+                      </div>
+                      <p className="text-white text-sm font-medium">
+                        {hour.temp}°
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Scroll right"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 shadow-lg"
+                  style={{
+                    display: weatherData.hourly.length > 4 ? "block" : "none",
+                  }}
+                  onClick={() => scrollHourly("right")}
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </div>
             </div>
           )}
 
-          <div className="mt-2 text-center text-white/60 text-sm">
-            Current: {selectedCity}
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mt-2 text-center text-red-300 text-sm bg-red-500/20 rounded-lg p-2">
-              {error}
-            </div>
-          )}
-        </div>
-
-        {/* Main Weather Card */}
-        <div className="bg-white/15 backdrop-blur-lg rounded-3xl p-8 mb-6 border border-white/20 shadow-2xl transform hover:scale-105 transition-all duration-300">
-          <div className="text-center">
-            <div className="mb-4">
-              {getWeatherIcon(weatherData.condition, "w-20 h-20")}
-            </div>
-            <h2 className="text-6xl font-thin text-white mb-2 drop-shadow-lg">
-              {weatherData.temperature}°
-            </h2>
-            <p className="text-white/80 text-lg capitalize mb-4">
-              {weatherData.condition}
-            </p>
-            <p className="text-white/70 text-sm">
-              Feels like {weatherData.feelsLike}°
-            </p>
-          </div>
-        </div>
-
-        {/* Weather Details Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <Droplets className="w-6 h-6 text-blue-300" />
-              <div className="text-right">
-                <p className="text-white/70 text-xs">Humidity</p>
-                <p className="text-white text-lg font-semibold">
-                  {weatherData.humidity}%
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <Wind className="w-6 h-6 text-green-300" />
-              <div className="text-right">
-                <p className="text-white/70 text-xs">Wind</p>
-                <p className="text-white text-lg font-semibold">
-                  {weatherData.windSpeed} mph
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <Eye className="w-6 h-6 text-purple-300" />
-              <div className="text-right">
-                <p className="text-white/70 text-xs">Visibility</p>
-                <p className="text-white text-lg font-semibold">
-                  {weatherData.visibility} mi
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <Gauge className="w-6 h-6 text-yellow-300" />
-              <div className="text-right">
-                <p className="text-white/70 text-xs">Pressure</p>
-                <p className="text-white text-lg font-semibold">
-                  {weatherData.pressure}"
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hourly Forecast */}
-        {weatherData.hourly.length > 0 && (
-          <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
-            <h3 className="text-white text-lg font-semibold mb-4">
-              Hourly Forecast
-            </h3>
-            <div className="relative">
-              <button
-                type="button"
-                aria-label="Scroll left"
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 shadow-lg"
-                style={{
-                  display: weatherData.hourly.length > 4 ? "block" : "none",
-                }}
-                onClick={() => scrollHourly("left")}
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <div
-                ref={hourlyScrollRef}
-                className="flex gap-4 pb-2 mx-auto w-full max-w-[300px] overflow-x-hidden"
-                style={{ scrollBehavior: "smooth" }}
-              >
-                {weatherData.hourly.map((hour, index) => (
+          {/* Weekly Forecast */}
+          {weatherData.forecast.length > 0 && (
+            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+              <h3 className="text-white text-lg font-semibold mb-4">
+                5 Day Forecast
+              </h3>
+              <div className="space-y-3">
+                {weatherData.forecast.map((day, index) => (
                   <div
                     key={index}
-                    className="flex-shrink-0 text-center min-w-[60px] hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                    className="flex items-center justify-between hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
                   >
-                    <p className="text-white/70 text-xs mb-2">{hour.time}</p>
-                    <div className="mb-2 flex justify-center">
-                      {getWeatherIcon(hour.condition, "w-5 h-5")}
+                    <div className="flex items-center gap-3">
+                      {getWeatherIcon(day.condition, "w-5 h-5")}
+                      <span className="text-white font-medium">
+                        {index === 0 ? "Today" : day.day}
+                      </span>
                     </div>
-                    <p className="text-white text-sm font-medium">
-                      {hour.temp}°
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-semibold">
+                        {day.high}°
+                      </span>
+                      <span className="text-white/60">{day.low}°</span>
+                    </div>
                   </div>
                 ))}
               </div>
-              <button
-                type="button"
-                aria-label="Scroll right"
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 shadow-lg"
-                style={{
-                  display: weatherData.hourly.length > 4 ? "block" : "none",
-                }}
-                onClick={() => scrollHourly("right")}
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
             </div>
-          </div>
-        )}
-
-        {/* Weekly Forecast */}
-        {weatherData.forecast.length > 0 && (
-          <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <h3 className="text-white text-lg font-semibold mb-4">
-              5 Day Forecast
-            </h3>
-            <div className="space-y-3">
-              {weatherData.forecast.map((day, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
-                >
-                  <div className="flex items-center gap-3">
-                    {getWeatherIcon(day.condition, "w-5 h-5")}
-                    <span className="text-white font-medium">
-                      {index === 0 ? "Today" : day.day}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-semibold">
-                      {day.high}°
-                    </span>
-                    <span className="text-white/60">{day.low}°</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
