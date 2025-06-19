@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Cloud,
   Sun,
@@ -10,6 +10,8 @@ import {
   Gauge,
   Search,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import "./hourly-scrollbar.css";
 
@@ -92,6 +94,8 @@ const WeatherApp: React.FC = () => {
     hourly: [],
     forecast: [],
   });
+
+  const hourlyScrollRef = useRef<HTMLDivElement>(null);
 
   // You need to get a free API key from https://www.weatherapi.com/
   const BASE_URL = "https://api.weatherapi.com/v1";
@@ -291,6 +295,17 @@ const WeatherApp: React.FC = () => {
     setTimeout(() => setShowSuggestions(false), 150);
   };
 
+  const scrollHourly = (direction: "left" | "right") => {
+    const container = hourlyScrollRef.current;
+    if (!container) return;
+    const scrollAmount = 120; // px per click
+    if (direction === "left") {
+      container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+    } else {
+      container.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
+
   return (
     <div
       className={`min-h-screen bg-gradient-to-br ${getBackgroundGradient(
@@ -457,19 +472,49 @@ const WeatherApp: React.FC = () => {
             <h3 className="text-white text-lg font-semibold mb-4">
               Hourly Forecast
             </h3>
-            <div className="flex gap-4 overflow-x-auto pb-2 hourly-scrollbar">
-              {weatherData.hourly.map((hour, index) => (
-                <div
-                  key={index}
-                  className="flex-shrink-0 text-center min-w-[60px] hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
-                >
-                  <p className="text-white/70 text-xs mb-2">{hour.time}</p>
-                  <div className="mb-2 flex justify-center">
-                    {getWeatherIcon(hour.condition, "w-5 h-5")}
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Scroll left"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 shadow-lg"
+                style={{
+                  display: weatherData.hourly.length > 4 ? "block" : "none",
+                }}
+                onClick={() => scrollHourly("left")}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <div
+                ref={hourlyScrollRef}
+                className="flex gap-4 pb-2 mx-auto w-full max-w-[300px] overflow-x-hidden"
+                style={{ scrollBehavior: "smooth" }}
+              >
+                {weatherData.hourly.map((hour, index) => (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 text-center min-w-[60px] hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                  >
+                    <p className="text-white/70 text-xs mb-2">{hour.time}</p>
+                    <div className="mb-2 flex justify-center">
+                      {getWeatherIcon(hour.condition, "w-5 h-5")}
+                    </div>
+                    <p className="text-white text-sm font-medium">
+                      {hour.temp}°
+                    </p>
                   </div>
-                  <p className="text-white text-sm font-medium">{hour.temp}°</p>
-                </div>
-              ))}
+                ))}
+              </div>
+              <button
+                type="button"
+                aria-label="Scroll right"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 shadow-lg"
+                style={{
+                  display: weatherData.hourly.length > 4 ? "block" : "none",
+                }}
+                onClick={() => scrollHourly("right")}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
             </div>
           </div>
         )}
