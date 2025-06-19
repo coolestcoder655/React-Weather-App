@@ -1,19 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Cloud,
-  Sun,
-  CloudRain,
-  CloudSnow,
-  Wind,
-  Droplets,
-  Eye,
-  Gauge,
-  Search,
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Cloud, Sun, CloudRain, CloudSnow, AlertCircle } from "lucide-react";
 import "./hourly-scrollbar.css";
+import SearchBar from "./components/SearchBar";
+import ConditionSquare from "./components/ConditionSquare";
+import HourlyForecast from "./components/HourlyForecast";
+import WeeklyForecast from "./components/WeeklyForecast";
 
 // Use Vite environment variable
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -365,53 +356,10 @@ const WeatherApp: React.FC = () => {
 
           {/* Weather Details Grid */}
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <Droplets className="w-6 h-6 text-blue-300" />
-                <div className="text-right">
-                  <p className="text-white/70 text-xs">Humidity</p>
-                  <p className="text-white text-lg font-semibold">
-                    {weatherData.humidity}%
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <Wind className="w-6 h-6 text-green-300" />
-                <div className="text-right">
-                  <p className="text-white/70 text-xs">Wind</p>
-                  <p className="text-white text-lg font-semibold">
-                    {weatherData.windSpeed} mph
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <Eye className="w-6 h-6 text-purple-300" />
-                <div className="text-right">
-                  <p className="text-white/70 text-xs">Visibility</p>
-                  <p className="text-white text-lg font-semibold">
-                    {weatherData.visibility} mi
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <Gauge className="w-6 h-6 text-yellow-300" />
-                <div className="text-right">
-                  <p className="text-white/70 text-xs">Pressure</p>
-                  <p className="text-white text-lg font-semibold">
-                    {weatherData.pressure}"
-                  </p>
-                </div>
-              </div>
-            </div>
+            <ConditionSquare type="humidity" value={weatherData.humidity} />
+            <ConditionSquare type="wind" value={weatherData.windSpeed} />
+            <ConditionSquare type="visibility" value={weatherData.visibility} />
+            <ConditionSquare type="pressure" value={weatherData.pressure} />
           </div>
         </div>
 
@@ -423,24 +371,13 @@ const WeatherApp: React.FC = () => {
               onSubmit={handleSearch}
               className="flex-1 flex items-center h-full"
             >
-              <div className="relative w-full">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-2 text-white/70" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleInputChange}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                  placeholder="Search for a city..."
-                  className="w-full bg-white/20 backdrop-blur-md text-white placeholder-white/70 rounded-2xl pl-12 pr-4 py-3 text-lg font-medium border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300"
-                  disabled={loading}
-                />
-                {loading && (
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  </div>
-                )}
-              </div>
+              <SearchBar
+                searchQuery={searchQuery}
+                loading={loading}
+                handleInputBlur={handleInputBlur}
+                handleInputFocus={handleInputFocus}
+                handleInputChange={handleInputChange}
+              />
             </form>
             {/* Autocomplete Suggestions */}
             {showSuggestions && suggestions.length > 0 && (
@@ -476,87 +413,18 @@ const WeatherApp: React.FC = () => {
           </div>
 
           {/* Hourly Forecast */}
-          {weatherData.hourly.length > 0 && (
-            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
-              <h3 className="text-white text-lg font-semibold mb-4">
-                Hourly Forecast
-              </h3>
-              <div className="relative">
-                <button
-                  type="button"
-                  aria-label="Scroll left"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 shadow-lg"
-                  style={{
-                    display: weatherData.hourly.length > 4 ? "block" : "none",
-                  }}
-                  onClick={() => scrollHourly("left")}
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <div
-                  ref={hourlyScrollRef}
-                  className="flex gap-4 pb-2 mx-auto w-full max-w-[300px] overflow-x-hidden"
-                  style={{ scrollBehavior: "smooth" }}
-                >
-                  {weatherData.hourly.map((hour, index) => (
-                    <div
-                      key={index}
-                      className="flex-shrink-0 text-center min-w-[60px] hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
-                    >
-                      <p className="text-white/70 text-xs mb-2">{hour.time}</p>
-                      <div className="mb-2 flex justify-center">
-                        {getWeatherIcon(hour.condition, "w-5 h-5")}
-                      </div>
-                      <p className="text-white text-sm font-medium">
-                        {hour.temp}°
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  aria-label="Scroll right"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 shadow-lg"
-                  style={{
-                    display: weatherData.hourly.length > 4 ? "block" : "none",
-                  }}
-                  onClick={() => scrollHourly("right")}
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-          )}
+          <HourlyForecast
+            hourly={weatherData.hourly}
+            getWeatherIcon={getWeatherIcon}
+            scrollHourly={scrollHourly}
+            hourlyScrollRef={hourlyScrollRef}
+          />
 
           {/* Weekly Forecast */}
-          {weatherData.forecast.length > 0 && (
-            <div className="bg-white/15 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <h3 className="text-white text-lg font-semibold mb-4">
-                5 Day Forecast
-              </h3>
-              <div className="space-y-3">
-                {weatherData.forecast.map((day, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-3">
-                      {getWeatherIcon(day.condition, "w-5 h-5")}
-                      <span className="text-white font-medium">
-                        {index === 0 ? "Today" : day.day}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-semibold">
-                        {day.high}°
-                      </span>
-                      <span className="text-white/60">{day.low}°</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <WeeklyForecast
+            forecast={weatherData.forecast}
+            getWeatherIcon={getWeatherIcon}
+          />
         </div>
       </div>
     </div>
